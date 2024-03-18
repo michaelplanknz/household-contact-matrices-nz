@@ -1,0 +1,6 @@
+old/
+docs/
+*.mat
+*.pdf
+synpop.csv
+supplementary_tables.zip
