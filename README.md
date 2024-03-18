@@ -9,9 +9,9 @@ Results in this version were generated using the commit tagged `v1.0` and were r
 # Structure of this repository
 
 The repository contains the following folders:
-`data` - the raw data that is used as model inputs and associated metdata (see [data](#data)).
-`functions` - Matlab functions that are called by the top-level script `main.m`.
-`results` - model outputs and associated metadata (see [results](#results)).
+- `data` - the raw data that is used as model inputs and associated metdata (see [data](#data)).
+- `functions` - Matlab functions that are called by the top-level script `main.m`.
+- `results` - model outputs and associated metadata (see [results](#results)).
 
 
 # How to use this repository
