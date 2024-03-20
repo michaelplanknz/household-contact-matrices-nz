@@ -2,5 +2,6 @@ old/
 docs/
 *.mat
 *.pdf
+*.docx
 synpop.csv
 supplementary_tables.zip
