@@ -20,7 +20,7 @@ Open Matlab and run the top-level script `main.m` to reproduce the results that 
 
 By default, `main.m` is set up to run a single realisation of the agent-based model for each combination of infection rate parameters (nReps = 1). You can change this by changing the value of nReps (set nReps = 100 to reproduce the results in the paper).  
 
-You can specify the values of the household and non-household infection rate parameters to run in the vectors change1 and change2.
+You can specify the values of the household and non-household infection rate parameters to run in the vectors aRateHouse and aRateNonhouse.
 
 
 
