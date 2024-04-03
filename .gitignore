@@ -1,6 +1,7 @@
 old/
 docs/
 *.mat
+*.asv
 *.pdf
 *.docx
 synpop.csv
