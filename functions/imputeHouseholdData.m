@@ -18,13 +18,10 @@ ii = 1;
 done = false;
 while ~done && ii <= maxIter
     popDf = targetPop - popSizeCurrent;
-    cosAngle = (tbl.HHfreq * popDf);                               % cosine angle between the pop discrepancy vector and the age composition vector for each household type
+    ck = (tbl.HHfreq * popDf);                               % cosine angle between the pop discrepancy vector and the age composition vector for each household type
     
-    % sample a household type to add, weighted by (original frequency * (1+cosAngle))
-%     weights = tbl.Count.*(1+cosAngle);
-%     k = randsample(nHouseTypes, nToAdd, true, weights); 
 
-     weights = tbl.Count.*abs(cosAngle);
+     weights = tbl.Count.*abs(ck);
      k = randsample(nHouseTypes, nToAdd, true, weights); 
 
     x(k) = max(minFreq, x(k)+sign(weights(k)) );
