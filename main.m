@@ -7,7 +7,7 @@ close all
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Number of realisations of the synthetic pop and ABM to run:
-nReps = 0;
+nReps = 1;
 Alpha = 0.05;           % Alpha level for confidence intervals
 
 % Numerical parameters - range of values for ah and an
@@ -78,7 +78,7 @@ tblRaw = getHouseholdData(fNameData);
 [Craw, popSizeRaw] = makeHouseholdContMat(tblRaw);
 
 % Impute data for missing part of pop by adjusting frequency of household types
-x = imputeHouseholdData(tblRaw, popSizeCensus10);
+x = imputeHouseholdData(tblRaw, popSizeCensus10, 1);
 tbl = tblRaw;
 tbl.Count = x;
 
@@ -142,10 +142,10 @@ parfor iChangeAll = 1:nChange1*nChange2
     fprintf('   done %i/%i\n', iChangeAll, nChange1*nChange2)
 end
 % Reshape results sturcutre arrays into 2D arrays corresponding to the two varied parameters:
-results_Prem = reshape(results_Prem, nChange2, nChange1)';
-results_HH5  = reshape(results_HH5, nChange2, nChange1)';
-results_HH10 = reshape(results_HH10, nChange2, nChange1)';
-results_ABM  = reshape(results_ABM, nChange2, nChange1)';
+results_Prem = reshape(results_Prem, nChange1, nChange2)';
+results_HH5  = reshape(results_HH5, nChange1, nChange2)';
+results_HH10 = reshape(results_HH10, nChange1, nChange2)';
+results_ABM  = reshape(results_ABM, nChange1, nChange2)';
 
 
 
@@ -178,7 +178,7 @@ if savFlag
     save(savFolder+"results.mat");
 end
 
-
+%%
 
 % Plot graphs
 h = figure(1);
@@ -286,9 +286,9 @@ if savFlag
     saveas(h, savFolder+'Fig3.png');
 end
 
-R0_Prem = reshape([results_Prem.R0], nChange1, nChange2);
-R0_HH5 = reshape([results_HH5.R0], nChange1, nChange2);
-R0_HH10 = reshape([results_HH10.R0], nChange1, nChange2);
+R0_Prem = reshape([results_Prem.R0], nChange2, nChange1);
+R0_HH5 = reshape([results_HH5.R0], nChange2, nChange1);
+R0_HH10 = reshape([results_HH10.R0], nChange2, nChange1);
 
 h = figure(4);
 h.Position = [ 1          41        1680         933];
@@ -296,7 +296,7 @@ tl = tiledlayout(nChange2, nChange1, 'Padding', 'Compact');
 for iChange2 = 1:nChange2
     for iChange1 = 1:nChange1
         nexttile
-        plot(age5+2.5, results_Prem(iChange1, iChange2).finalSize, '.-', age5+2.5, results_HH5(iChange1, iChange2).finalSize, '.-', age10+5, results_HH10(iChange1, iChange2).finalSize, '.-', age10+5, results_ABM(iChange1, iChange2).finalSize, '.-')
+        plot(age5+2.5, results_Prem(iChange2, iChange1).finalSize, '.-', age5+2.5, results_HH5(iChange2, iChange1).finalSize, '.-', age10+5, results_HH10(iChange2, iChange1).finalSize, '.-', age10+5, results_ABM(iChange2, iChange1).finalSize, '.-')
         grid on
         if iChange1 == 1 && iChange2 == 1
             legend('Prem-ODE(5)', 'Household-ODE(5)', 'Household-ODE(10)', 'Household-ABM(10)')
@@ -304,7 +304,7 @@ for iChange2 = 1:nChange2
        ylim([0 1])
        xlabel(tl, 'age (years)');
        ylabel(tl, 'proportion infected')
-       subtitle(sprintf('R_0 = %.2f ', R0_HH10(iChange1, iChange2) ));
+       subtitle(sprintf('R_0 = %.2f ', R0_HH10(iChange2, iChange1) ));
        if iChange2 == 1
             title(sprintf('a_h = %.3f', aRateHouse(iChange1)));
        end
@@ -324,15 +324,15 @@ tl = tiledlayout(nChange2, nChange1, 'Padding', 'Compact');
 for iChange2 = 1:nChange2
     for iChange1 = 1:nChange1
        nexttile
-       med = results_ABM(iChange1, iChange2).finalSize_med;
-       neg = results_ABM(iChange1, iChange2).finalSize_med - results_ABM(iChange1, iChange2).finalSize_lo;
-       pos = results_ABM(iChange1, iChange2).finalSize_hi - results_ABM(iChange1, iChange2).finalSize_med;
+       med = results_ABM(iChange2, iChange1).finalSize_med;
+       neg = results_ABM(iChange2, iChange1).finalSize_med - results_ABM(iChange2, iChange1).finalSize_lo;
+       pos = results_ABM(iChange2, iChange1).finalSize_hi - results_ABM(iChange2, iChange1).finalSize_med;
        errorbar(age10+5, med, neg, pos, '.-')
        grid on
        ylim([0 1])
        xlabel(tl, 'age (years)');
        ylabel(tl, 'proportion infected')
-       subtitle(sprintf('R_0 = %.2f ', R0_HH10(iChange1, iChange2) ));
+       subtitle(sprintf('R_0 = %.2f ', R0_HH10(iChange2, iChange1) ));
        if iChange2 == 1
             title(sprintf('a_h = %.3f', aRateHouse(iChange1)));
        end
@@ -353,16 +353,16 @@ tl = tiledlayout(nChange2, nChange1, 'Padding', 'Compact');
 for iChange2 = 1:nChange2
     for iChange1 = 1:nChange1
        nexttile
-       med = results_ABM(iChange1, iChange2).finalSize_byHH_med;
-       neg = results_ABM(iChange1, iChange2).finalSize_byHH_med - results_ABM(iChange1, iChange2).finalSize_byHH_lo;
-       pos = results_ABM(iChange1, iChange2).finalSize_byHH_hi - results_ABM(iChange1, iChange2).finalSize_byHH_med;
+       med = results_ABM(iChange2, iChange1).finalSize_byHH_med;
+       neg = results_ABM(iChange2, iChange1).finalSize_byHH_med - results_ABM(iChange2, iChange1).finalSize_byHH_lo;
+       pos = results_ABM(iChange2, iChange1).finalSize_byHH_hi - results_ABM(iChange2, iChange1).finalSize_byHH_med;
        errorbar(1:maxHHsize, med, neg, pos, '.-')
        grid on
        ylim([0 1])
        xlim([1 maxHHsize])
        xlabel(tl, 'household size');
        ylabel(tl, 'proportion infected')
-       subtitle(sprintf('R_0 = %.2f ', R0_HH10(iChange1, iChange2) ));
+       subtitle(sprintf('R_0 = %.2f ', R0_HH10(iChange2, iChange1) ));
        if iChange2 == 1
             title(sprintf('a_h = %.3f', aRateHouse(iChange1)));
        end

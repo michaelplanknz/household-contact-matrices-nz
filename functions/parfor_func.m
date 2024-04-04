@@ -20,7 +20,7 @@ if nReps > 0
     fs_size = zeros(nReps, maxHHsize);
     for iRep = 1:nReps
         tblInd = tblRaw;
-        tblInd.Count = imputeHouseholdData(tblRaw, popSize10);
+        tblInd.Count = imputeHouseholdData(tblRaw, popSize10, 0);
         synPopInd = makeSynPop(tblInd);
         resultsTemp  = getABMResults( synPopInd, a_h, a_n*Pn10, par10 );
         fs_age(iRep, :) = resultsTemp.finalSize;
