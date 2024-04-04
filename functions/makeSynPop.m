@@ -1,6 +1,15 @@
 function [synPop, gr] = makeSynPop(tbl)
 
-%fprintf('Making synthetic population... ')
+% Construct a synthetic population from the household composition data in
+% tbl
+% The synthetic population is returned in two different formats:
+% - synPop is a table with fields for personID, age group, household ID,
+% household size, and a list of person IDs of `neighbours' (i.e. other
+% individuals in the same household)
+% - gr is an undirected graph object with nodes consisting of individuals
+% and an edge betwee nodes that belong to the same household, the
+% individual attributed listed above are included as node attributes
+
 
 HHsizeDist = groupsummary(tbl, "totHHsize", "sum", "Count");  
 
@@ -9,19 +18,23 @@ HHsizeDist = groupsummary(tbl, "totHHsize", "sum", "Count");
 popSize = sum(tbl.HHfreq.*tbl.Count)'; 
 popSizeTot = sum(popSize);
 
-
+% Set up synthetic pop fields
 synPop.personID = (1:popSizeTot)';
 synPop.ageGroup = nan(popSizeTot, 1);
 synPop.houseID = nan(popSizeTot, 1);
 synPop.houseSize = nan(popSizeTot, 1);
 synPop.neighbourIDs = cell(popSizeTot, 1);
 
+% Total number of edges in the network
 nEdges = sum( HHsizeDist.totHHsize.*(HHsizeDist.totHHsize-1)/2 .* HHsizeDist.sum_Count);
 EndNodes = nan(nEdges, 2);
+
+
 
 edgeCount = 1;
 houseCount = 1;
 indCount = 1;
+% Construct synPop table one household type at a time:
 for iHouseType = 1:nHouseTypes
     nHouses = tbl.Count(iHouseType);        % number of houses of this type
 
@@ -55,14 +68,12 @@ for iHouseType = 1:nHouseTypes
     indCount = indCount+nNew;
 end
 
-nHouses = houseCount - 1;
-
 synPop = struct2table(synPop);
 
-% Make a graph object wthat is a collectiopn of complete graphs, one for each household, that are disconnnected from one another
+% Make a graph object wthat is a union of complete graphs, one for each household, that are disconnnected from one another
 EdgeTable = table(EndNodes);
 gr = graph(EdgeTable, synPop);
 
-%fprintf('done: %i individuals in %i households\n', height(synPop), nHouses )
+
 
 
