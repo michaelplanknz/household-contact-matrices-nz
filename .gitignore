@@ -1,8 +1,8 @@
 old/
 docs/
+supplementary_tables/
 *.mat
 *.asv
 *.pdf
 *.docx
 synpop.csv
-supplementary_tables.zip
