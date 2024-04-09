@@ -1,8 +1,8 @@
 # Quantifying age specific household contacts for infectious disease modelling 
 
-This repository provides data, code and outputs to accompany the article "Quantifying age specific household contacts for infectious disease modelling" by ...
+This repository provides data, code and outputs to accompany the article "Quantifying age specific household contacts for infectious disease modelling" by Sullivan et al.
 
-A preprint of this article is available at ...
+A preprint of this article is available [here](https://arxiv.org/abs/2404.04300).
 Results in this version were generated using the commit tagged `v1.0` and were run in Matlab R2022b.
 
 
@@ -31,7 +31,7 @@ The `data` folder contains the following files:
 - pop_size_by_age_2018census_usually_resident.csv - 2018 census usually resident population estimates in 5-year age bands.
 - Table_1_rounded.csv - the Stats NZ household composition data. Each row of this CSV file corresponds to one household type. The first 8 columns show the number of people in that household type in each age gorup, the column `Count` contains the number of households of that type, and the column `Count_people` contains the total number of people in households of that type. See Table 1a in the article for an example.
 - JOB-12355 metadata.xslx - Stats NZ metadata and conditions of supply.
-- nz_contacts_xxxx.xlsx (where xxxx is either home, school, work or other) - synthetic contact matrices projected onto the New Zealand population by Prem et al. (2017). See https://doi.org/10.1371/journal.pcbi.1005697.
+- nz_contacts_xxxx.xlsx (where xxxx is either home, school, work or other) - synthetic contact matrices projected onto the New Zealand population by [Prem et al. (2017)](https://doi.org/10.1371/journal.pcbi.1005697).
 
 
 # Results
