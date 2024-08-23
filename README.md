@@ -38,7 +38,7 @@ The `data` folder contains the following files:
 
 The `results` folder contains the following files:
 - household_matrix_10.csv - contact matrix derived from the New Zealand household composition data in 10-year age bands.
-- popsize.csv - population size derived from the New Zealand household composition data (after imputation and mapping to 5-year age bands).
+- popsize.csv - population size derived from the New Zealand household composition data (after imputation).
 - household_matrix_metadata.xlsx - metadata for the household contact matrix files.
 - synpop.zip - compressed folder containing synpop.csv - the synthetic population derived from the New Zealand household composition data in 10-year age bands.
 - synpop_metadata.xlsx - metadata for the synthetic population file.
