@@ -32,8 +32,8 @@ while ~done && ii <= maxIter
     popDf = targetPop - popSizeCurrent;         % discrepancy vector between the current and target population size 
     ck = (tbl.HHfreq * popDf)./tbl.totHHsize;          % calculate ck for each household type according to how similar it is to the pop discrepancy vector (normalised by household size)
 
-    weights = tbl.Count.*abs(ck);               % calculate sampling weights by multiplying ck by the count for each household type in the raw data tbl.Count
-
+    weights = tbl.Count.*max(0, ck);               % calculate sampling weights by multiplying ck by the count for each household type in the raw data tbl.Count
+    
     % Sample a household type to add/remove
     k = randsample(nHouseTypes, nToAdd, true, weights); 
     x(k) = max(minFreq, x(k)+sign(weights(k)) );

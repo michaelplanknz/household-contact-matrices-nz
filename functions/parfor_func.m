@@ -1,4 +1,4 @@
-function [results_Prem, results_HH5, results_HH10, results_ABM] = parfor_func(a_h, a_n, Ph5, C5, C10, Pn5, Pn10, par5, par10, tblRaw, popSize10, nReps, Alpha )
+function [results_Prem, results_HH10, results_ABM] = parfor_func(a_h, a_n, Ph5, C10, Pn5, Pn10, par5, par10, tblRaw, popSize10, nReps, Alpha )
 
 %  Contents of parfor loop in a function to ensure correct parallelisation
 
@@ -7,9 +7,9 @@ maxHHsize = max(tblRaw.totHHsize);
 
 % Run compartment-based model with Prem matrix
 results_Prem = getODEResults(  a_h*Ph5, a_n*Pn5, par5 );
-
-% Run compartment-based model with household composotion matrix on 5-year age groups
-results_HH5  = getODEResults(  a_h*C5, a_n*Pn5, par5);
+results_Prem.I = results_Prem.I(:, 1:2:15) + results_Prem.I(:, 2:2:16);     % aggregate results from 5-year bands into 10-year bands 
+nInf = results_Prem.finalSize.*par5.popSize';
+results_Prem.finalSize = (nInf(1:2:15)+nInf(2:2:16)) ./ par10.popSize';       
 
 % Run compartment-based model with household composotion matrix on 10-year age groups
 results_HH10 = getODEResults(  a_h*C10, a_n*Pn10, par10 );

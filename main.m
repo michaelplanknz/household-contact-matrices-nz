@@ -74,7 +74,7 @@ tblRaw = getHouseholdData(fNameData);
 % Data processing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Make contact matrix from the raw data
+% Make household contact matrix from the raw household composition data
 [Craw, popSizeRaw] = makeHouseholdContMat(tblRaw);
 
 % Impute data for missing part of pop by adjusting frequency of household types
@@ -82,7 +82,7 @@ x = imputeHouseholdData(tblRaw, popSizeCensus10, 1);
 tbl = tblRaw;
 tbl.Count = x;
 
-% Make contact matrix from imputed data
+% Make household contact matrix from the imputed household composition data
 [C10, popSize10] = makeHouseholdContMat(tbl);
 
 % Map the represented population in 10 year age bands to 5 year age bands
@@ -93,24 +93,21 @@ popSize5 = round(popSizeCensus5 .* scaleFactor);
 Ph5 = forceDetBal(P5_home, popSize5);
 Pn5 = forceDetBal(P5_school+P5_work+P5_other, popSize5);
 
-% Map contact matrix derived from 10-year household composition data onto a finer (5 year age bands) matrix using the Prem matrix to weight contributions within finer age groups
-% (function also outputs a coarse version of the Prem matrix, Ph10)
-C5 = mapCoarseFine(C10, Ph5, popSize5);
-
-% Get a coarse version (Pn10) of the Prem non-household contact matrix to use in the ABM
+% Get a coarse version of the Prem home (Ph) and non-home (Pn) contact matrices (Ph10
+% is for plotting only, Pn10 is used in the ABM)
+[~, Ph10, ~] = mapCoarseFine(C10, Ph5, popSize5);
 [~, Pn10, ~] = mapCoarseFine(C10, Pn5, popSize5);
 
 % Calculate dominant eigenvectors of various home contact matrices
 [evCraw, ~] = getDomEV(Craw');
-[evC5, dC5] = getDomEV(C5');
-[evC10, ~] = getDomEV(C10');
+[evC10, dC10] = getDomEV(C10');
 [evPh5, dPh5] = getDomEV(Ph5');
 
 
 % Scale Prem matrices so the dominant eigvenvalue of Prem household matrix matches that of the household composition data matrix
-Ph5 = Ph5* (dC5/dPh5);
-Pn5 = Pn5 * (dC5/dPh5);
-Pn10 = Pn10 * (dC5/dPh5);
+Ph5 = Ph5* (dC10/dPh5);
+Pn5 = Pn5 * (dC10/dPh5);
+Pn10 = Pn10 * (dC10/dPh5);
 
 % Make synthetic population for simulating the ABM
 synPop = makeSynPop(tbl);
@@ -138,12 +135,11 @@ aRateNonhouseList = repelem(aRateNonhouse, nChange1, 1);
 
 [~, nAgeGroupsHH] = size(tbl.HHfreq);
 parfor iChangeAll = 1:nChange1*nChange2
-    [results_Prem(iChangeAll), results_HH5(iChangeAll), results_HH10(iChangeAll), results_ABM(iChangeAll)] = parfor_func(aRateHouseList(iChangeAll), aRateNonhouseList(iChangeAll), Ph5, C5, C10, Pn5, Pn10, par5, par10, tblRaw, popSizeCensus10, nReps, Alpha );
+    [results_Prem(iChangeAll), results_HH10(iChangeAll), results_ABM(iChangeAll)] = parfor_func(aRateHouseList(iChangeAll), aRateNonhouseList(iChangeAll), Ph5, C10, Pn5, Pn10, par5, par10, tblRaw, popSizeCensus10, nReps, Alpha );
     fprintf('   done %i/%i\n', iChangeAll, nChange1*nChange2)
 end
 % Reshape results sturcutre arrays into 2D arrays corresponding to the two varied parameters:
 results_Prem = reshape(results_Prem, nChange1, nChange2)';
-results_HH5  = reshape(results_HH5, nChange1, nChange2)';
 results_HH10 = reshape(results_HH10, nChange1, nChange2)';
 results_ABM  = reshape(results_ABM, nChange1, nChange2)';
 
@@ -159,7 +155,7 @@ results_ABM  = reshape(results_ABM, nChange1, nChange2)';
 
 % Make a table with population size after imputation to save alongside
 % household contact matrices
-popSizeSav = table(age5', popSize5, 'VariableNames', {'age', 'population'});
+popSizeSav = table(age10', popSize10, 'VariableNames', {'age', 'population'});
 
 % Make a table with household size distribution data (raw and imputed)
 HHsizeDistRaw = groupsummary(tblRaw, "totHHsize", "sum", "Count");        
@@ -172,29 +168,34 @@ HHsizeDist.p = HHsizeDist.sum_Count/sum(HHsizeDist.sum_Count);
 % results in .mat file
 if savFlag
     writematrix(C10, savFolder+fNameContMat+"_10.csv");
-    writematrix(C5, savFolder+fNameContMat+"_5.csv");
     writetable(popSizeSav, savFolder+fNamePopSize+".csv");
     writetable(synPop, savFolder+fNameSynPop+".csv");
     save(savFolder+"results.mat");
 end
 
-%%
 
 % Plot graphs
 h = figure(1);
 h.Position =  [560   296   856   652];
 subplot(2, 2, 1);
-plot(age10+5, popSizeRaw/1e6, 'o-', age10+5, popSize10/1e6, 'o-', age10+5, popSizeCensus10/1e6, 'o-')
+plot(age10+5, popSizeRaw/1e6, 'LineStyle', '-', 'Marker', 'o', 'LineWidth', 1.5)
+hold on
+plot(age10+5, popSize10/1e6, 'LineStyle', '--', 'Marker', 'd', 'LineWidth', 1.5)
+plot(age10+5, popSizeCensus10/1e6, 'LineStyle', '-', 'Marker', '+', 'LineWidth', 1.5)
 xlabel('age (years)')
 ylabel('population size (millions)')
 legend('raw', 'imputed', 'census pop', 'Location', 'southwest')
 title('(a)')
+grid on
 subplot(2, 2, 2);
-plot(HHsizeDistRaw.totHHsize, HHsizeDistRaw.p, 'o-', HHsizeDist.totHHsize, HHsizeDist.p, 'o-')
+plot(HHsizeDistRaw.totHHsize, HHsizeDistRaw.p, 'LineStyle', '-', 'Marker', 'o', 'LineWidth', 1.5)
+hold on
+plot(HHsizeDist.totHHsize, HHsizeDist.p, 'LineStyle', '--', 'Marker', 'd', 'LineWidth', 1.5)
 xlabel('household size')
 ylabel('proportion of households')
 legend('raw','imputed')
 title('(b)')
+grid on
 subplot(2, 2, 3)
 histogram(log10(tblRaw.Count));
 hold on
@@ -205,13 +206,18 @@ xlabel('frequency of household type')
 ylabel('number of household types')
 legend('raw', 'imputed')
 title('(c)')
+grid on
 subplot(2, 2, 4);
-plot(age10+5, sum(Craw, 2), 'o-', age10+5, sum(C10, 2), 'o-', age5+2.5, sum(C5, 2), 'o-', age5+2.5, sum(Ph5, 2), 'o-')
+plot(age10+5, sum(Craw, 2), 'LineStyle', '-', 'Marker', 'o', 'LineWidth', 1.5)
+hold on
+plot(age10+5, sum(C10, 2), 'LineStyle', '--', 'Marker', 'd', 'LineWidth', 1.5)
+plot(age5+2.5, sum(Ph5, 2), 'LineStyle', '-', 'Marker', '+', 'LineWidth', 1.5)
 xlabel('age (years)')
 ylabel('avg household contacts per person')
-legend('raw(10)', 'imputed(10)', 'imputed(5)', 'Prem(5)', 'Location', 'southwest')
+legend('raw', 'imputed', 'balanced Prem', 'Location', 'southwest')
 ylim([0 inf])
 title('(d)')
+grid on
 if savFlag
     saveas(h, savFolder+'Fig1.png');
 end
@@ -219,25 +225,26 @@ end
 
 
 h = figure(2);
-tl = tiledlayout(2, 2, 'Padding', 'Compact');
+h.Position = [   100   596   981   279];
+tl = tiledlayout(1, 3, 'Padding', 'Compact');
 nexttile;
-imagesc(age10, age10, Craw); 
-clim([0 1.2])
-title('(a) raw')
-nexttile;
-imagesc(age5, age5, C10);
-clim([0 1.2])
-title('(b) imputed')
-nexttile;
-imagesc(age10, age10, C5);
-clim([0 1.2])
-title('(c) imputed(5)')
-nexttile;
-imagesc(age5, age5, Ph5); 
-clim([0 1.2])
-title('(d) Prem')
+imagesc(age10, age10, Ph10); 
+clim([0 1.9])
 cb = colorbar;
-cb.Layout.Tile = 'east';
+h = gca; h.Colormap = gray;
+title('(a) balanced Prem')
+nexttile;
+imagesc(age10, age10, C10);
+clim([0 1.9])
+cb = colorbar;
+h = gca; h.Colormap = gray;
+title('(b) household data')
+nexttile;
+imagesc(age10, age10, Ph10-C10); 
+clim([-0.5 0.5])
+title('(c) difference')
+cb = colorbar;
+h = gca; h.Colormap = jet;
 xlabel(tl, 'age of contact (years)')
 ylabel(tl, 'age of individual (years)')
 if savFlag
@@ -245,49 +252,73 @@ if savFlag
 end
 
 
+h = figure(102);
+h.Position = [   100   596   981   279];
+tl = tiledlayout(1, 3, 'Padding', 'Compact');
+nexttile;
+imagesc(age10, age10, Craw); 
+clim([0 1.9])
+cb = colorbar;
+h = gca; h.Colormap = gray;
+title('(a) household data - raw')
+nexttile;
+imagesc(age10, age10, C10);
+clim([0 1.9])
+cb = colorbar;
+h = gca; h.Colormap = gray;
+title('(b) household data - imputed')
+nexttile;
+imagesc(age10, age10, Craw-C10); 
+clim([-0.025 0.025])
+title('(c) difference')
+cb = colorbar;
+h = gca; h.Colormap = jet;
+xlabel(tl, 'age of contact (years)')
+ylabel(tl, 'age of individual (years)')
+if savFlag
+    saveas(h, savFolder+'FigS1.png');
+end
+
+
+
 
 colOrd = colororder;
-colOrd = [colOrd; [0 0 0]];
+colOrd(7, :) = [0.8 0 0.8];
+
 
 h = figure(3);
-h.Position = [    89          87        1040         763];
+h.Position = [      89         563        1047         287];
 set(gcf, 'DefaultAxesColorOrder', colOrd);
-set(gcf, 'DefaultAxesLineStyleOrder', {'-','--',':'});
-subplot(2, 2, 1)
-plot(results_Prem(1, 1).t, results_Prem(1, 1).I./par5.popSize')
-ylim([0 0.02])
+tl = tiledlayout(1, 3, 'Padding', 'Compact');
+nexttile;
+plot(results_Prem(1, 1).t, results_Prem(1, 1).I./par10.popSize')
+ylim([0 0.011])
 xlabel('t (days)')
 ylabel('proportion infectious')
-l = legend(string(0:5:75));
-l.Position = [    0.3897    0.5974    0.0625    0.3506];
-title('(a) Prem-ODE(5)')
-subplot(2, 2, 2)
-plot(results_HH5(1, 1).t, results_HH5(1, 1).I./par5.popSize')
-ylim([0 0.02])
-xlabel('t (days)')
-ylabel('proportion infectious')
-title('(b) Household-ODE(5)')
-subplot(2, 2, 3)
-set(gcf, 'DefaultAxesColorOrder', colOrd(1:2:end, :));
-set(gcf, 'DefaultAxesLineStyleOrder', {'-','--',':'});
+l = legend("0-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70", "70+");
+title('(a) ODE - balanced Prem')
+grid on
+nexttile;
+set(gcf, 'DefaultAxesColorOrder', colOrd);
 plot(results_HH10(1, 1).t, results_HH10(1, 1).I./par10.popSize')
-ylim([0 0.02])
+ylim([0 0.011])
 xlabel('t (days)')
 ylabel('proportion infectious')
-legend(string(0:10:70))
-title('(b) Household-ODE(10)')
-subplot(2, 2, 4)
+title('(b) ODE - household data')
+grid on
+nexttile;
+set(gcf, 'DefaultAxesColorOrder', colOrd);
 plot(results_ABM(1, 1).t, results_ABM(1, 1).I'./par10.popSize )
-ylim([0 0.02])
+ylim([0 0.011])
 xlabel('t (days)')
 ylabel('proportion infectious')
-title('(d) Household-ABM(10)')
+title('(c) ABM - household data')
+grid on
 if savFlag
     saveas(h, savFolder+'Fig3.png');
 end
 
 R0_Prem = reshape([results_Prem.R0], nChange2, nChange1);
-R0_HH5 = reshape([results_HH5.R0], nChange2, nChange1);
 R0_HH10 = reshape([results_HH10.R0], nChange2, nChange1);
 
 h = figure(4);
@@ -296,10 +327,10 @@ tl = tiledlayout(nChange2, nChange1, 'Padding', 'Compact');
 for iChange2 = 1:nChange2
     for iChange1 = 1:nChange1
         nexttile
-        plot(age5+2.5, results_Prem(iChange2, iChange1).finalSize, '.-', age5+2.5, results_HH5(iChange2, iChange1).finalSize, '.-', age10+5, results_HH10(iChange2, iChange1).finalSize, '.-', age10+5, results_ABM(iChange2, iChange1).finalSize, '.-')
+        plot(age10+5, results_Prem(iChange2, iChange1).finalSize(1, :), '.-', age10+5, results_HH10(iChange2, iChange1).finalSize, '.-', age10+5, results_ABM(iChange2, iChange1).finalSize, '.-')
         grid on
         if iChange1 == 1 && iChange2 == 1
-            legend('Prem-ODE(5)', 'Household-ODE(5)', 'Household-ODE(10)', 'Household-ABM(10)')
+            legend('ODE - balanced Prem', 'ODE - household data', 'ABM - household data')
         end
        ylim([0 1])
        xlabel(tl, 'age (years)');
@@ -318,6 +349,11 @@ if savFlag
 end
 
 
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Supplementary figures 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 h = figure(5);
 h.Position = [ 1          41        1680         933];
 tl = tiledlayout(nChange2, nChange1, 'Padding', 'Compact');
@@ -342,7 +378,7 @@ for iChange2 = 1:nChange2
     end
 end
 if savFlag
-    saveas(h, savFolder+'FigS1.png');
+    saveas(h, savFolder+'FigS2.png');
 end
 
 
@@ -372,7 +408,7 @@ for iChange2 = 1:nChange2
     end
 end
 if savFlag
-    saveas(h, savFolder+'FigS2.png');
+    saveas(h, savFolder+'FigS3.png');
 end
 
 
