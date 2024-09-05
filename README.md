@@ -1,10 +1,12 @@
 # Quantifying age specific household contacts for infectious disease modelling 
 
-This repository provides data, code and outputs to accompany the article "Quantifying age specific household contacts for infectious disease modelling" by Sullivan et al.
+This repository provides data, code and outputs to accompany the article [Quantifying age specific household contacts for infectious disease modelling](https://dx.doi.org/10.1098/rsos.240550) by Sullivan et al.
 
 A preprint of this article is available [here](https://arxiv.org/abs/2404.04300).
 Results in the first version were generated using the commit tagged `v1.0`.
 Results in the revised version were generated using the commit tagged `v2.1`.
+
+The final published version is available open access at [https://dx.doi.org/10.1098/rsos.240550](https://dx.doi.org/10.1098/rsos.240550)
 
 All analyses were run in Matlab R2022b.
 
